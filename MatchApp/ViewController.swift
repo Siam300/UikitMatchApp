@@ -18,7 +18,9 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
     var firstFlippedCardIndex: IndexPath?
     
     var timer: Timer?
-    var milliseconds: Int = 10 * 1000
+    var milliseconds: Int = 30 * 1000
+    
+    var soundPlayer = SoundManager()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +35,11 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         // initialize the timer
         timer = Timer.scheduledTimer(timeInterval: 0.001, target: self, selector: #selector(timerFired), userInfo: nil, repeats: true)
         RunLoop.main.add(timer!, forMode: .common)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        // play shuffle sound
+        soundPlayer.playSound(effect: .shuffle)
     }
     
     // MARK: - Timer methods
@@ -80,6 +87,11 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        // check if theres any time remaining. dont let the user interact if the time is 0
+        if milliseconds <= 0 {
+            return
+        }
+        
         // get a reference to the cell that was tapped
         let cell = collectionView.cellForItem(at: indexPath) as? CardCollectionViewCell
         
@@ -87,6 +99,9 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         if cell?.card?.isFlipped == false && cell?.card?.isMatched == false {
             // flip the card up
             cell?.flipUP()
+            
+            // play flip sound
+            soundPlayer.playSound(effect: .flip)
             
             // check if this the first card that was flipped or the second card
             if firstFlippedCardIndex == nil {
@@ -113,7 +128,9 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         
         // compare the two cards
         if cardOne.imageName == cardTwo.imageName {
-            // its amatch
+            // its a match
+            // play match sound
+            soundPlayer.playSound(effect: .match)
             
             // set the status and remove them
             cardOne.isMatched = true
@@ -126,6 +143,10 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
             checkfForGameEnd()
         } else {
             // its not a match
+            
+            // play nomatch sound
+            soundPlayer.playSound(effect: .nomatch)
+            
             cardOne.isFlipped = false
             cardTwo.isFlipped = false
             
@@ -144,19 +165,21 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         var hasWon = true
         
         for card in cardsArray {
-            if !card.isMatched {
+            if card.isMatched == false {
                 // weve found a card that is unmatched
                 hasWon = false
                 break
             }
         }
         
-        if hasWon {
+        if hasWon == true {
             // user has won, show alert
             showAlert(title: "Congratulations!", message: "You've won the game!")
         } else {
             // user hasnt won yet, check is theres any time left
-            showAlert(title: "Time's Up!", message: "Sorry, better luck next time!")
+            if milliseconds <= 0 {
+                showAlert(title: "Time's Up!", message: "Sorry, better luck next time!")
+            }
         }
         
     }
