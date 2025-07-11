@@ -67,7 +67,6 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
             } else {
                 // second card that is flipped
                 
-                
                 // run the comparison logic
                 checkForMatch(indexPath)
             }
@@ -96,6 +95,8 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
             cardTwoCell?.remove()
         } else {
             // its not a match
+            cardOne.isFlipped = false
+            cardTwo.isFlipped = false
             
             // flip them back over
             cardOneCell?.flipDown()
